@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   try {
     // STEP 1: Summarize abstract if too long
     let summarizedAbstract = abstractText;
-    if (abstractText.length > 900) {
+    if (abstractText.length > 700) {
       const summaryResponse = await openai.chat.completions.create({
         model: 'gpt-4-1106-preview', // or 'gpt-3.5-turbo'
         messages: [
