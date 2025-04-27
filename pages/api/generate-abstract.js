@@ -1,24 +1,25 @@
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 import { generateQRCode } from '../../lib/generateQRCode';
 import { mergeImages } from '../../lib/mergeImages';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { abstractText, citation } = req.body;
+  const { doi, abstractText, citation } = req.body;
 
-  const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
-  const openai = new OpenAIApi(configuration);
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
 
   try {
-    const dalleResponse = await openai.createImage({
+    const dalleResponse = await openai.images.generate({
       prompt: `Create a social media friendly visual abstract infographic based on this research abstract: ${abstractText}`,
       n: 1,
-      size: '1024x1024',
+      size: '1600x900',
     });
 
-    const imageURL = dalleResponse.data.data[0].url;
-    const qrCodeBuffer = await generateQRCode('https://doi.org/' + req.body.doi);
+    const imageURL = dalleResponse.data[0].url;
+    const qrCodeBuffer = await generateQRCode('https://doi.org/' + doi);
     const finalImageUrl = await mergeImages(imageURL, qrCodeBuffer);
 
     res.status(200).json({ imageURL: finalImageUrl });
