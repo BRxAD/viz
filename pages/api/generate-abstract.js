@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     const dalleResponse = await openai.images.generate({
       prompt: `Create a social media friendly visual abstract infographic based on this research summary: ${summarizedAbstract}`,
       n: 1,
-      size: '1600x900',
+      size: '512x512',
     });
 
     const imageURL = dalleResponse.data[0].url;
