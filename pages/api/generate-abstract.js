@@ -35,7 +35,7 @@ IMPLICATIONS: ${citation.slice(0, 300)}
       model: "gpt-image-1",
       prompt: finalPrompt,
       n: 1,
-      size: "1536x1024",  // Landscape 16:9
+      size: "1600x900",  // Landscape 16:9
       output_format: "png",
       background: "opaque",
       quality: "high"
