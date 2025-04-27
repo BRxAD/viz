@@ -41,14 +41,14 @@ export default async function handler(req, res) {
       finalPrompt = finalPrompt.substring(0, 999);
     }
 
-    // Correct DALL-E call
-    const dalleResponse = await openai.images.generate({
-      model: "dall-e-3",
-      prompt: finalPrompt,
-      size: "1024x1024",
-      style: "vivid,
-    });
-
+    // Correct DALL-E call);
+const dalleResponse = await openai.images.generate({
+  model: "dall-e-3",
+  prompt: finalPrompt,
+  size: "1024x1024",
+  style: "vivid",
+  response_format: "url",
+});
     const imageURL = dalleResponse.data[0].url;
     const qrCodeBuffer = await generateQRCode('https://doi.org/' + doi);
     const finalImageUrl = await mergeImages(imageURL, qrCodeBuffer);
