@@ -41,7 +41,7 @@ Do NOT generate any fake text or hallucinated letters. Use clean visuals, icons,
       finalPrompt = finalPrompt.substring(0, 999);
     }
 
-    // Generate image using gpt-4o via tool_call
+    // Generate image using gpt-4o
     const chatResponse = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -53,40 +53,6 @@ Do NOT generate any fake text or hallucinated letters. Use clean visuals, icons,
               text: finalPrompt,
             },
           ],
-        },
-      ],
-      tools: [
-        {
-          type: "function",
-          function: {
-            name: "generate_image",
-            description: "Generate a clean visual abstract image",
-            parameters: {
-              type: "object",
-              properties: {
-                prompt: {
-                  type: "string",
-                  description: "Detailed description of image content",
-                },
-                size: {
-                  type: "string",
-                  enum: ["1024x1024", "1792x1024", "1024x1792"],
-                  description: "Size of image",
-                },
-                style: {
-                  type: "string",
-                  enum: ["vivid", "natural"],
-                  description: "Visual style of the image",
-                },
-                response_format: {
-                  type: "string",
-                  enum: ["url"],
-                  description: "The format in which the generated image will be returned",
-                },
-              },
-              required: ["prompt", "size", "style", "response_format"],
-            },
-          },
         },
       ],
       tool_choice: {
@@ -103,32 +69,25 @@ Do NOT generate any fake text or hallucinated letters. Use clean visuals, icons,
       },
     });
 
-    // Parse image URL safely
-    const toolCalls = chatResponse.choices[0].message.tool_calls;
+    // Correctly parse image URL
+    const contents = chatResponse.choices[0].message.content;
 
-    if (!toolCalls || toolCalls.length === 0) {
-      throw new Error('No tool call was made by the model.');
+    if (!contents || !Array.isArray(contents)) {
+      throw new Error('No content array found in chat response.');
     }
 
-    const imageToolCall = toolCalls.find(call => call.function.name === "generate_image");
+    const imageContent = contents.find(c => c.type === "image_url");
 
-    if (!imageToolCall) {
-      throw new Error('No generate_image function call found.');
+    if (!imageContent || !imageContent.image_url || !imageContent.image_url.url) {
+      throw new Error('No image URL found in message content.');
     }
 
-    const parsedArguments = JSON.parse(imageToolCall.function.arguments);
-
-    if (!parsedArguments || !parsedArguments.url) {
-      throw new Error('No image URL found in tool call function output.');
-    }
-
-    const imageURL = parsedArguments.url;
+    const imageURL = imageContent.image_url.url;
 
     // Merge QR code
     const qrCodeBuffer = await generateQRCode('https://doi.org/' + doi);
     const finalImageUrl = await mergeImages(imageURL, qrCodeBuffer);
 
-    // Return result
     res.status(200).json({ imageURL: finalImageUrl });
 
   } catch (err) {
@@ -136,4 +95,5 @@ Do NOT generate any fake text or hallucinated letters. Use clean visuals, icons,
     res.status(500).json({ error: 'Failed to generate visual abstract.' });
   }
 }
+
 
