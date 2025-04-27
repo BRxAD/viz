@@ -46,6 +46,7 @@ export default async function handler(req, res) {
       model: "dall-e-3",
       prompt: finalPrompt,
       size: "1024x1024",
+      style: "vivid,
     });
 
     const imageURL = dalleResponse.data[0].url;
