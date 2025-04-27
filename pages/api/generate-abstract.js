@@ -35,14 +35,13 @@ export default async function handler(req, res) {
 
     // Build final prompt
     let finalPrompt = `Create a clean, minimal, social media friendly visual abstract infographic based on this research summary: ${summarizedAbstract}. 
-Do NOT generate any fake text or hallucinated letters. Use clean visuals, icons, shapes only. Avoid fake paragraphs or distorted writing. The layout should be visually clear.`;
+Do NOT generate any fake text or hallucinated letters. Use clean visuals, icons, and shapes only. Avoid fake paragraphs or distorted writing. The layout should be visually clear, infographic-style, with labeled sections.`;
 
-    // Truncate if too long
     if (finalPrompt.length > 1000) {
       finalPrompt = finalPrompt.substring(0, 999);
     }
 
-    // Image generation using gpt-4o tool call
+    // Generate image using gpt-4o via tool_call
     const chatResponse = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -103,27 +102,35 @@ Do NOT generate any fake text or hallucinated letters. Use clean visuals, icons,
         },
       },
     });
-// Correct way to extract generated image URL
-const toolCalls = chatResponse.choices[0]?.message?.tool_calls;
 
-if (!toolCalls || toolCalls.length === 0) {
-  throw new Error('No tool calls found in chat completion response.');
-}
+    // Parse image URL safely
+    const toolCalls = chatResponse.choices[0].message.tool_calls;
 
-const toolCall = toolCalls[0];
-const functionArguments = JSON.parse(toolCall.function.arguments);
+    if (!toolCalls || toolCalls.length === 0) {
+      throw new Error('No tool call was made by the model.');
+    }
 
-// Correct key might be "image_url" not "url"
-const imageURL = functionArguments.image_url || functionArguments.url;
+    const imageToolCall = toolCalls.find(call => call.function.name === "generate_image");
 
-if (!imageURL) {
-  throw new Error('No image URL found in tool call function output.');
-};
+    if (!imageToolCall) {
+      throw new Error('No generate_image function call found.');
+    }
 
+    const parsedArguments = JSON.parse(imageToolCall.function.arguments);
+
+    if (!parsedArguments || !parsedArguments.url) {
+      throw new Error('No image URL found in tool call function output.');
+    }
+
+    const imageURL = parsedArguments.url;
+
+    // Merge QR code
     const qrCodeBuffer = await generateQRCode('https://doi.org/' + doi);
     const finalImageUrl = await mergeImages(imageURL, qrCodeBuffer);
 
+    // Return result
     res.status(200).json({ imageURL: finalImageUrl });
+
   } catch (err) {
     console.error('Image generation error:', err);
     res.status(500).json({ error: 'Failed to generate visual abstract.' });
