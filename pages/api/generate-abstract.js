@@ -12,8 +12,30 @@ export default async function handler(req, res) {
   });
 
   try {
+    // STEP 1: Summarize abstract if too long
+    let summarizedAbstract = abstractText;
+    if (abstractText.length > 900) {
+      const summaryResponse = await openai.chat.completions.create({
+        model: 'gpt-4-1106-preview', // or 'gpt-3.5-turbo'
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert scientific writer. Summarize research abstracts into <= 800 characters while keeping key ideas clear and accurate.',
+          },
+          {
+            role: 'user',
+            content: abstractText,
+          },
+        ],
+        max_tokens: 400,
+      });
+
+      summarizedAbstract = summaryResponse.choices[0].message.content.trim();
+    }
+
+    // STEP 2: Use summarized abstract in DALL-E
     const dalleResponse = await openai.images.generate({
-      prompt: `Create a social media friendly visual abstract infographic based on this research abstract: ${abstractText}`,
+      prompt: `Create a social media friendly visual abstract infographic based on this research summary: ${summarizedAbstract}`,
       n: 1,
       size: '1600x900',
     });
