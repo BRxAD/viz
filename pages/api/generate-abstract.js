@@ -38,7 +38,7 @@ export default async function handler(req, res) {
 
     // Step 3: Truncate to maximum 1000 characters if needed
     if (finalPrompt.length > 1000) {
-      finalPrompt = finalPrompt.substring(0, 999); // Always safe for DALL-E
+      finalPrompt = finalPrompt.substring(0, 850); // Always safe for DALL-E
     }
 
     // Step 4: Send prompt to DALL-E
