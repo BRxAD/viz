@@ -1,5 +1,4 @@
 import { useState } from 'react';
-
 export default function Home() {
   const [doi, setDoi] = useState('');
   const [abstractText, setAbstractText] = useState('');
