@@ -103,11 +103,22 @@ Do NOT generate any fake text or hallucinated letters. Use clean visuals, icons,
         },
       },
     });
+// Correct way to extract generated image URL
+const toolCalls = chatResponse.choices[0]?.message?.tool_calls;
 
-    const toolOutput = chatResponse.choices[0].message.tool_calls[0].function.arguments;
-    const parsedToolOutput = JSON.parse(toolOutput);
+if (!toolCalls || toolCalls.length === 0) {
+  throw new Error('No tool calls found in chat completion response.');
+}
 
-    const imageURL = parsedToolOutput.url;
+const toolCall = toolCalls[0];
+const functionArguments = JSON.parse(toolCall.function.arguments);
+
+// Correct key might be "image_url" not "url"
+const imageURL = functionArguments.image_url || functionArguments.url;
+
+if (!imageURL) {
+  throw new Error('No image URL found in tool call function output.');
+};
 
     const qrCodeBuffer = await generateQRCode('https://doi.org/' + doi);
     const finalImageUrl = await mergeImages(imageURL, qrCodeBuffer);
