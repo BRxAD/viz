@@ -12,11 +12,11 @@ export default async function handler(req, res) {
   });
 
   try {
-    // Step 1: Summarize if too long
+    // Summarize if too long
     let summarizedAbstract = abstractText;
     if (abstractText.length > 800) {
       const summaryResponse = await openai.chat.completions.create({
-        model: 'gpt-4-1106-preview', // Or use 'gpt-3.5-turbo' if preferred
+        model: 'gpt-4-1106-preview',
         messages: [
           {
             role: 'system',
@@ -33,19 +33,20 @@ export default async function handler(req, res) {
       summarizedAbstract = summaryResponse.choices[0].message.content.trim();
     }
 
-    // Step 2: Build final prompt
+    // Build final prompt
     let finalPrompt = `Create a social media friendly visual abstract infographic based on this research summary: ${summarizedAbstract}`;
 
-    // Step 3: Truncate to maximum 1000 characters if needed
+    // Truncate if too long
     if (finalPrompt.length > 1000) {
-      finalPrompt = finalPrompt.substring(0, 850); // Always safe for DALL-E
+      finalPrompt = finalPrompt.substring(0, 999);
     }
 
-    // Step 4: Send prompt to DALL-E
+    // Correct DALL-E call
     const dalleResponse = await openai.images.generate({
+      model: "dall-e-3",
       prompt: finalPrompt,
       n: 1,
-      size: '1024x1024',
+      size: "1024x1024",
     });
 
     const imageURL = dalleResponse.data[0].url;
