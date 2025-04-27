@@ -41,7 +41,7 @@ Do NOT generate any fake text or hallucinated letters. Use clean visuals, icons,
       finalPrompt = finalPrompt.substring(0, 999);
     }
 
-    // Generate image using gpt-4o
+    // Generate image using gpt-4o tool call
     const chatResponse = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -53,6 +53,40 @@ Do NOT generate any fake text or hallucinated letters. Use clean visuals, icons,
               text: finalPrompt,
             },
           ],
+        },
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "generate_image",
+            description: "Generate a clean visual abstract image",
+            parameters: {
+              type: "object",
+              properties: {
+                prompt: {
+                  type: "string",
+                  description: "Detailed description of image content",
+                },
+                size: {
+                  type: "string",
+                  enum: ["1024x1024", "1792x1024", "1024x1792"],
+                  description: "Size of image",
+                },
+                style: {
+                  type: "string",
+                  enum: ["vivid", "natural"],
+                  description: "Visual style of the image",
+                },
+                response_format: {
+                  type: "string",
+                  enum: ["url"],
+                  description: "The format in which the generated image will be returned",
+                },
+              },
+              required: ["prompt", "size", "style", "response_format"],
+            },
+          },
         },
       ],
       tool_choice: {
